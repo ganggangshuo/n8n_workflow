@@ -1,0 +1,16 @@
+{
+  "id": "JBEHpP9Ib66wsWRt",
+  "name": "qq mail IMAP account",
+  "type": "imap",
+  "data": {
+    "user": "",
+    "password": "",
+    "host": ""
+  },
+  "ownedBy": {
+    "type": "personal",
+    "projectId": "z4xrzX6UbOdfRzVH",
+    "projectName": "小刚 王 <767937116@qq.com>",
+    "personalEmail": "767937116@qq.com"
+  }
+}

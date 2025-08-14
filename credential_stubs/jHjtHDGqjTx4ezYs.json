@@ -1,0 +1,14 @@
+{
+  "id": "jHjtHDGqjTx4ezYs",
+  "name": "Notion account",
+  "type": "notionApi",
+  "data": {
+    "apiKey": ""
+  },
+  "ownedBy": {
+    "type": "personal",
+    "projectId": "z4xrzX6UbOdfRzVH",
+    "projectName": "小刚 王 <767937116@qq.com>",
+    "personalEmail": "767937116@qq.com"
+  }
+}

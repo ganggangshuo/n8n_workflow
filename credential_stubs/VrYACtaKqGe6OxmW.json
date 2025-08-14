@@ -1,0 +1,14 @@
+{
+  "id": "VrYACtaKqGe6OxmW",
+  "name": "Telegram account",
+  "type": "telegramApi",
+  "data": {
+    "accessToken": ""
+  },
+  "ownedBy": {
+    "type": "personal",
+    "projectId": "z4xrzX6UbOdfRzVH",
+    "projectName": "小刚 王 <767937116@qq.com>",
+    "personalEmail": "767937116@qq.com"
+  }
+}

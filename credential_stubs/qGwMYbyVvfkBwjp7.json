@@ -1,0 +1,15 @@
+{
+  "id": "qGwMYbyVvfkBwjp7",
+  "name": "v3 OpenAi account",
+  "type": "openAiApi",
+  "data": {
+    "apiKey": "",
+    "url": ""
+  },
+  "ownedBy": {
+    "type": "personal",
+    "projectId": "z4xrzX6UbOdfRzVH",
+    "projectName": "小刚 王 <767937116@qq.com>",
+    "personalEmail": "767937116@qq.com"
+  }
+}

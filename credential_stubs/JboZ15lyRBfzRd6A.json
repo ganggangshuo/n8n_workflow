@@ -1,0 +1,15 @@
+{
+  "id": "JboZ15lyRBfzRd6A",
+  "name": "GitHub account",
+  "type": "githubApi",
+  "data": {
+    "user": "",
+    "accessToken": ""
+  },
+  "ownedBy": {
+    "type": "personal",
+    "projectId": "z4xrzX6UbOdfRzVH",
+    "projectName": "小刚 王 <767937116@qq.com>",
+    "personalEmail": "767937116@qq.com"
+  }
+}

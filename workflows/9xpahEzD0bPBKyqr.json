@@ -1,0 +1,212 @@
+{
+  "id": "9xpahEzD0bPBKyqr",
+  "name": "获取天气信息",
+  "nodes": [
+    {
+      "parameters": {
+        "url": "=http://apis.juhe.cn/simpleWeather/query?key=f538f952f5fedf988063133dd05fe51c&city={{$json.cityStr}}",
+        "options": {}
+      },
+      "name": "获取天气信息",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        784,
+        96
+      ],
+      "id": "5489dc6c-cf76-460f-b334-5990b559f5b4"
+    },
+    {
+      "parameters": {
+        "requestMethod": "POST",
+        "url": "={{$json.url}}",
+        "jsonParameters": true,
+        "options": {
+          "followRedirect": false
+        },
+        "bodyParametersJson": "={{$json.body}}",
+        "headerParametersJson": "{\"Content-Type\": \"application/json\"}",
+        "queryParametersJson": "\"\""
+      },
+      "name": "发送到钉钉",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        1232,
+        96
+      ],
+      "id": "3b57b09a-5cf7-4696-bfae-39dc8d55f33d"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 8
+            },
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        336,
+        0
+      ],
+      "id": "beb9c02d-5155-4358-b8db-1e8bb596f3ec",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "path": "send",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        336,
+        192
+      ],
+      "id": "e7fd1e63-3f7f-4765-92fe-0be1418e19d0",
+      "name": "Webhook",
+      "webhookId": "b445c458-76eb-4d1d-805f-1676311e2305"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f249509b-07df-485b-a588-2f5d1a6b7353",
+              "name": "=cityStr",
+              "value": "浦东新区",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        560,
+        0
+      ],
+      "id": "ec4fe09b-b0d8-4321-8261-fd00a297641f",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json.query;\nreturn {\n    \"cityStr\": item?.message\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        560,
+        192
+      ],
+      "id": "becb52fe-b8de-47c2-89e5-76fd8008040c",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "functionCode": "const crypto = require('crypto');\nconst secret = 'SECdcb1a68b1b5580bd4e4638f99ae370df217618571137fc1e285c9fd94da76952';\nconst webhook = 'https://oapi.dingtalk.com/robot/send?access_token=004a1c25735b18081c7b43b5673040e5e04deacefef50ca5bdd6709fb1f5b13f';\n\nconst weatherData = $json.result;\nif (!weatherData) {\n  console.log('天气数据获取失败');\n  return [];\n}\n\nconst city = weatherData.city;\nconst realtime = weatherData.realtime;\n   \nvar  futureArr= weatherData.future;\n\nvar markdownText = `## ${city}天气提醒\\n\\n**实时天气:**\\n- 温度: ${realtime.temperature}°C\\n- 湿度: ${realtime.humidity}%\\n- 天气: ${realtime.info}\\n- 风向: ${realtime.direct} ${realtime.power}\\n- 空气质量: ${realtime.aqi}\\n\\n`;\nvar dateListStr=`**未来5天预报:**\\n`;\n\nfutureArr.forEach((item)=>{\n    dateListStr+=`\\n\\n**${item.date}**\\n- 温度: ${item.temperature}\\n- 天气: ${item.weather}\\n- 风向: ${item.direct}\\n`;\n})\n\nconst message = {\n  msgtype: 'markdown',\n  markdown: {\n    title: `${city}天气提醒`,\n    text: markdownText+dateListStr\n  }\n};\n\nconst timestamp = Date.now();\nconst stringToSign = `${timestamp}\\n${secret}`;\nconst signature = crypto.createHmac('sha256', secret)\n                        .update(stringToSign)\n                        .digest('base64');\n\nconst signedUrl = `${webhook}&timestamp=${timestamp}&sign=${encodeURIComponent(signature)}`;\n\nreturn [{\n  json: {\n    url: signedUrl,\n    body: message\n  }\n}];"
+      },
+      "name": "组装钉钉webhook消息",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1008,
+        96
+      ],
+      "id": "8017fdf2-2945-4a64-a1a2-daf7c69611df"
+    }
+  ],
+  "connections": {
+    "获取天气信息": {
+      "main": [
+        [
+          {
+            "node": "组装钉钉webhook消息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "获取天气信息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "获取天气信息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "组装钉钉webhook消息": {
+      "main": [
+        [
+          {
+            "node": "发送到钉钉",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "executionTimeout": 3600,
+    "timezone": "UTC"
+  },
+  "triggerCount": 2,
+  "versionId": "7a9cd630-58ba-4b6d-b999-d0bf61b5af04",
+  "owner": {
+    "type": "personal",
+    "projectId": "z4xrzX6UbOdfRzVH",
+    "projectName": "小刚 王 <767937116@qq.com>",
+    "personalEmail": "767937116@qq.com"
+  },
+  "parentFolderId": null,
+  "isArchived": false
+}

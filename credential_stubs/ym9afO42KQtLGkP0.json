@@ -1,0 +1,15 @@
+{
+  "id": "ym9afO42KQtLGkP0",
+  "name": "Browserless Credentials account",
+  "type": "browserlessApi",
+  "data": {
+    "url": "",
+    "token": ""
+  },
+  "ownedBy": {
+    "type": "personal",
+    "projectId": "z4xrzX6UbOdfRzVH",
+    "projectName": "小刚 王 <767937116@qq.com>",
+    "personalEmail": "767937116@qq.com"
+  }
+}

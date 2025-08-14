@@ -1,0 +1,17 @@
+{
+  "id": "WwMo6jUeR050pBE2",
+  "name": "MySQL account",
+  "type": "mySql",
+  "data": {
+    "host": "",
+    "database": "",
+    "user": "",
+    "password": ""
+  },
+  "ownedBy": {
+    "type": "personal",
+    "projectId": "z4xrzX6UbOdfRzVH",
+    "projectName": "小刚 王 <767937116@qq.com>",
+    "personalEmail": "767937116@qq.com"
+  }
+}

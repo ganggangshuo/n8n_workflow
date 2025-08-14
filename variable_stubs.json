@@ -1,0 +1,56 @@
+[
+  {
+    "id": "0c0fEr2PEZ1fCS8t",
+    "key": "useragent",
+    "type": "string",
+    "value": ""
+  },
+  {
+    "id": "TrIbQTbQiJXUzsth",
+    "key": "wxappid",
+    "type": "string",
+    "value": ""
+  },
+  {
+    "id": "mEF0LlpfIG7AJSKB",
+    "key": "wxsecret",
+    "type": "string",
+    "value": ""
+  },
+  {
+    "id": "lxR0GhqUEqAIPao6",
+    "key": "dingdwebhooktoken",
+    "type": "string",
+    "value": ""
+  },
+  {
+    "id": "wWgQqQDbgT4yCjw2",
+    "key": "notionApi",
+    "type": "string",
+    "value": ""
+  },
+  {
+    "id": "Pb7AGAqPACzYa0lT",
+    "key": "ContentType",
+    "type": "string",
+    "value": ""
+  },
+  {
+    "id": "dQBfvcBXu1Fda1Fe",
+    "key": "notionData",
+    "type": "string",
+    "value": ""
+  },
+  {
+    "id": "4jKvAbIlDdbPrJAS",
+    "key": "deeplxApi",
+    "type": "string",
+    "value": ""
+  },
+  {
+    "id": "PFmZBni135JOZjFJ",
+    "key": "deeplxData",
+    "type": "string",
+    "value": ""
+  }
+]

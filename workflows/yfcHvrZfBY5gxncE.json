@@ -1,0 +1,139 @@
+{
+  "id": "yfcHvrZfBY5gxncE",
+  "name": "AI翻译流程",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=你是一个专业的中英文翻译工具。  \n任务：将输入的 Markdown 文本中所有英文翻译为简体中文，并保留原有的 Markdown 格式和排版（包括标题、列表、代码块、链接等）。  \n\n严格规则：  \n1. 只翻译英文，保留已有中文、数字、符号及 Markdown 标记不变。  \n2. 保留代码块、超链接地址、图片链接、表格结构原样，不翻译这些内容。  \n3. 输出内容必须为完整的 Markdown 格式，且与输入格式完全一致（仅替换英文为中文）。  \n4. 不添加、删除或解释任何文字，不输出额外内容。  \n5. 无论输入内容是否符合规范，都必须返回符合上述规则的 Markdown 格式文本。  \n\n以下是待翻译内容：\n{{ $json.input }}\n",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -512,
+        416
+      ],
+      "id": "8608a87a-8f63-43e8-b6d1-b24ce15996eb",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "chatgpt-4o-latest",
+          "mode": "list",
+          "cachedResultName": "chatgpt-4o-latest"
+        },
+        "options": {
+          "maxTokens": 16384
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -512,
+        592
+      ],
+      "id": "87d4268f-b650-4966-8c92-7715bf317913",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "qGwMYbyVvfkBwjp7",
+          "name": "v3 OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "input"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -704,
+        224
+      ],
+      "id": "d010203c-76d3-4932-8612-f0a881afa122",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9b568450-db52-4bb1-ae86-8c500cf01100",
+              "name": "fanyi_output",
+              "value": "={{ $json.output }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -144,
+        368
+      ],
+      "id": "8daa1fbe-22b6-4227-910e-50dc2138880b",
+      "name": "Edit Fields"
+    }
+  ],
+  "connections": {
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "triggerCount": 0,
+  "versionId": "c84aa54f-dec5-4b38-aa9b-56cb849381eb",
+  "owner": {
+    "type": "personal",
+    "projectId": "z4xrzX6UbOdfRzVH",
+    "projectName": "小刚 王 <767937116@qq.com>",
+    "personalEmail": "767937116@qq.com"
+  },
+  "parentFolderId": null,
+  "isArchived": false
+}
