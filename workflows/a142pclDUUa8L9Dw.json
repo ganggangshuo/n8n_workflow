@@ -1,0 +1,136 @@
+{
+  "id": "a142pclDUUa8L9Dw",
+  "name": "发送钉钉消息",
+  "nodes": [
+    {
+      "parameters": {
+        "requestMethod": "POST",
+        "url": "={{$json.url}}{{ $vars.dingdwebhooktoken }}",
+        "allowUnauthorizedCerts": true,
+        "jsonParameters": true,
+        "options": {
+          "followRedirect": false
+        },
+        "bodyParametersJson": "={{$json.body}}",
+        "headerParametersJson": "{\"Content-Type\": \"application/json\"}",
+        "queryParametersJson": "\"\""
+      },
+      "name": "发送到钉钉",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        304,
+        -96
+      ],
+      "id": "0bf68012-9bf1-4048-9f3d-99e9803ac00e"
+    },
+    {
+      "parameters": {
+        "functionCode": "console.log($json )\nif (!$json || !$json.title || !$json.content)\n  return [\n    {\n      json: {\n        url: \"\",\n        body: \"\",\n      },\n    },\n  ];\nconst webhook = \"https://oapi.dingtalk.com/robot/send?access_token=\";\n\nconst message = {\n  msgtype: \"markdown\",\n  markdown: {\n    title: $json.title,\n    text: $json.content,\n  },\n};\n\nreturn [\n  {\n    json: {\n      url: webhook,\n      body: message,\n    },\n  },\n];\n"
+      },
+      "name": "组装钉钉webhook消息",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        -176,
+        -144
+      ],
+      "id": "404627bb-0265-46bf-9c69-97d71161ca10"
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -432,
+        -80
+      ],
+      "id": "4882abcd-19e2-433d-80f7-dbc16cce8efb",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "86254060-c42d-425b-adcc-bb1e59b8393e",
+              "leftValue": "={{ $json.url }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -16,
+        -80
+      ],
+      "id": "72f1a2dc-bb16-4e12-a93f-df2803a8cd23",
+      "name": "If"
+    }
+  ],
+  "connections": {
+    "组装钉钉webhook消息": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "组装钉钉webhook消息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "发送到钉钉",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "triggerCount": 0,
+  "versionId": "c92b5995-dd2e-4b80-85d9-1e1151996aa2",
+  "owner": {
+    "type": "personal",
+    "projectId": "z4xrzX6UbOdfRzVH",
+    "projectName": "小刚 王 <767937116@qq.com>",
+    "personalEmail": "767937116@qq.com"
+  },
+  "parentFolderId": null,
+  "isArchived": false
+}

@@ -3,12 +3,44 @@
     {
       "id": "oJ2zt2W6E9PKIIsO",
       "name": "插件工具"
+    },
+    {
+      "id": "ZNE84N3Q3OUmQEvD",
+      "name": "工作流"
     }
   ],
   "mappings": [
     {
       "workflowId": "yfcHvrZfBY5gxncE",
       "tagId": "oJ2zt2W6E9PKIIsO"
+    },
+    {
+      "workflowId": "a142pclDUUa8L9Dw",
+      "tagId": "oJ2zt2W6E9PKIIsO"
+    },
+    {
+      "workflowId": "ylw1eG3sfQeHWu9h",
+      "tagId": "ZNE84N3Q3OUmQEvD"
+    },
+    {
+      "workflowId": "C8C5QD5wW4Gu8U28",
+      "tagId": "ZNE84N3Q3OUmQEvD"
+    },
+    {
+      "workflowId": "QpKhlLOPl8I4gXEs",
+      "tagId": "ZNE84N3Q3OUmQEvD"
+    },
+    {
+      "workflowId": "UzoFjfQUAJAc0VFD",
+      "tagId": "ZNE84N3Q3OUmQEvD"
+    },
+    {
+      "workflowId": "jUJtnLYy0lSPn9Kb",
+      "tagId": "ZNE84N3Q3OUmQEvD"
+    },
+    {
+      "workflowId": "9xpahEzD0bPBKyqr",
+      "tagId": "ZNE84N3Q3OUmQEvD"
     }
   ]
 }

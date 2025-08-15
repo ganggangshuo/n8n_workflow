@@ -1,0 +1,303 @@
+{
+  "id": "ylw1eG3sfQeHWu9h",
+  "name": "notion影视墙",
+  "nodes": [
+    {
+      "parameters": {
+        "url": "=https://search.douban.com/movie/subject_search?search_text={{ $json.body[\"影视名称\"] }}&cat=1002",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "user-agent",
+              "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "c7fa17a0-faab-4f18-b3fc-d2a18b07cc18",
+      "name": "搜索影视",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -32,
+        48
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://movie.douban.com/subject/{{ $json.subject_id }}/",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "90693627-959d-4689-8379-5317f14ecc6d",
+      "name": "获取电影详情",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        624,
+        48
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=你是一个专业的数据提取AI助手。你的任务是从{{ $json.data }}中提取关键信息，并直接生成Notion API所需的格式。\n\n## 需要提取的信息与Notion格式：\n\n1. 分析HTML内容，提取以下信息：\n   - 名称：电影/电视剧的标题\n   - 类别：判断是\"电影\"还是\"电视剧\"\n   - 导演：所有导演姓名及其对应链接（最多提取全部）\n   - 编剧：所有编剧姓名及其对应链接（最多提取全部）\n   - 主演：仅提取前五位主演姓名及其对应链接\n   - 类型：如\"剧情/悬疑/犯罪\"，需拆分为多个选项\n   - 语言：使用的语言，需拆分为多个选项\n   - 评分：豆瓣评分数值\n   - IMDb：IMDb编号\n   - 首播/上映日期：必须包含完整格式，如\"2025-03-25(中国大陆)\"，保留括号及其内容\n   - 简介：影片的剧情概述\n   - 又名：影片的其他名称\n   - 封面图片URL：电影海报的链接地址\n\n2. 根据提取的信息，生成以下Notion API格式的JSON：\n\n```json\n{\n  \"parent\": {\n    \"database_id\": \"PLACEHOLDER_DATABASE_ID\"\n  },\n  \"cover\": {\n    \"type\": \"external\",\n    \"external\": {\n      \"url\": \"封面图片URL\"\n    }\n  },\n  \"properties\": {\n    \"名称\": {\n      \"title\": [\n        {\n          \"text\": {\n            \"content\": \"电影/电视剧标题\"\n          }\n        }\n      ]\n    },\n    \"类别\": {\n      \"select\": {\n        \"name\": \"电影或电视剧\"\n      }\n    },\n    \"导演\": {\n      \"rich_text\": [\n        {\n          \"type\": \"text\",\n          \"text\": {\n            \"content\": \"导演名称，含链接\",\n            \"link\": {\n              \"url\": \"导演链接\"\n            }\n          }\n        }\n      ]\n    },\n    \"编剧\": {\n      \"rich_text\": [\n        {\n          \"type\": \"text\",\n          \"text\": {\n            \"content\": \"编剧名称列表，含链接\",\n            \"link\": null\n          }\n        }\n      ]\n    },\n    \"主演\": {\n      \"rich_text\": [\n        {\n          \"type\": \"text\",\n          \"text\": {\n            \"content\": \"主演名称列表，含链接\",\n            \"link\": null\n          }\n        }\n      ]\n    },\n    \"类型\": {\n      \"multi_select\": [\n        {\"name\": \"类型1\"},\n        {\"name\": \"类型2\"}\n      ]\n    },\n    \"语言\": {\n      \"multi_select\": [\n        {\"name\": \"语言1\"},\n        {\"name\": \"语言2\"}\n      ]\n    },\n    \"评分\": {\n      \"number\": 8.5\n    },\n    \"IMDb\": {\n      \"rich_text\": [\n        {\n          \"type\": \"text\",\n          \"text\": {\n            \"content\": \"IMDb编号\"\n          }\n        }\n      ]\n    },\n    \"首播\": {\n      \"rich_text\": [\n        {\n          \"type\": \"text\",\n          \"text\": {\n            \"content\": \"上映日期\"\n          }\n        }\n      ]\n    },\n    \"简介\": {\n      \"rich_text\": [\n        {\n          \"type\": \"text\",\n          \"text\": {\n            \"content\": \"　　剧情简介\"\n          }\n        }\n      ]\n    },\n    \"又名\": {\n      \"rich_text\": [\n        {\n          \"type\": \"text\",\n          \"text\": {\n            \"content\": \"又名\"\n          }\n        }\n      ]\n    }\n  }\n}\n```\n\n## 提取说明：\n- 对于导演、编剧和主演的链接，请按以下格式处理富文本：将每个人的名称作为带链接的单独富文本项，链接指向其豆瓣页面\n- 对于类型和语言，将其拆分为多个值并转换为multi_select格式\n- 类别判断：如果页面包含\"集数\"或\"季\"字样，或URL路径中包含\"tv\"，则为\"电视剧\"，否则为\"电影\"\n- 确保类型和语言作为单独的选项，而不是拼接在一起的文本\n- 如果有些字段无法提取，请使用合理的默认值\n\n分析过程中，请优先寻找带有明确标识的数据，如property=\"v:itemreviewed\"标识标题，property=\"v:summary\"标识剧情等。\n确保所有字段符合Notion API的格式要求，特别是多选和选择类型字段。\n直接返回json数据即可 不需要任何解释型语言",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        848,
+        48
+      ],
+      "id": "e7141a51-5592-4acf-b203-1d1fbafad13b",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "movie-search",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -256,
+        48
+      ],
+      "id": "49c3bf38-93eb-479c-8bec-2dafb858ee3d",
+      "name": "Webhook",
+      "webhookId": "6d90ffc7-5930-42da-82a1-2a2fb6edc8a4"
+    },
+    {
+      "parameters": {
+        "amount": 3
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        192,
+        48
+      ],
+      "id": "805f3990-8f5b-4b74-9f30-2b8e4f1aecd2",
+      "name": "Wait",
+      "webhookId": "5dc4177e-673e-4754-b126-5c6c989c4ac8"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 仅提取第一个搜索结果的subject_id\nconst html = $input.item.json.data; // 假设HTTP Request节点获取的页面内容\n\n// 方法1: 从window.__DATA__对象提取\nconst regex = /window\\.__DATA__\\s*=\\s*({.+?});/s;\nconst match = html.match(regex);\n\nif (match && match[1]) {\n  try {\n    const data = JSON.parse(match[1]);\n    \n    // 获取search_subject类型的第一个结果\n    const firstResult = data.items.find(item => item.tpl_name === \"search_subject\" && item.id);\n    \n    if (firstResult) {\n      return {\n        json: {\n          subject_id: firstResult.id\n        }\n      };\n    } else {\n      // 如果没有找到search_subject类型的结果，返回错误\n      return { json: { error: '未找到搜索结果' } };\n    }\n  } catch (error) {\n    // JSON解析失败，尝试备用方法\n    const idMatch = html.match(/href=\"https:\\/\\/movie\\.douban\\.com\\/subject\\/(\\d+)\\//);\n    return { json: { subject_id: idMatch ? idMatch[1] : null } };\n  }\n} else {\n  // 备用方法：直接从HTML提取第一个subject_id\n  const idMatch = html.match(/href=\"https:\\/\\/movie\\.douban\\.com\\/subject\\/(\\d+)\\//);\n  return { json: { subject_id: idMatch ? idMatch[1] : null } };\n}"
+      },
+      "id": "5607c1d2-be94-4b95-a7de-02725ace711c",
+      "name": "提取影视id",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        416,
+        48
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// 处理AI返回的数据，提取JSON并确保格式正确，设置基于评分的emoji图标\nconst processAIResponse = (aiResponse, databaseId) => {\n  // 初始化结果对象\n  let result;\n  \n  try {\n    // 尝试直接解析AI的返回值（如果已经是JSON对象）\n    if (typeof aiResponse === 'object' && aiResponse !== null) {\n      result = aiResponse;\n    } \n    // 如果是字符串，先检查是否包含代码块\n    else if (typeof aiResponse === 'string') {\n      // 尝试寻找JSON代码块\n      const jsonMatch = aiResponse.match(/```(?:json)?\\s*([\\s\\S]*?)\\s*```/);\n      if (jsonMatch && jsonMatch[1]) {\n        // 解析代码块中的JSON\n        result = JSON.parse(jsonMatch[1]);\n      } else {\n        // 如果没有代码块，尝试直接解析整个字符串\n        try {\n          result = JSON.parse(aiResponse);\n        } catch (e) {\n          // 如果还是失败，输出错误并返回空对象\n          console.error('无法解析AI返回的字符串为JSON:', e);\n          result = {};\n        }\n      }\n    } else {\n      // 其他情况，返回空对象\n      console.error('AI返回了未预期的数据类型');\n      result = {};\n    }\n    \n    // 确保提取的对象有正确的结构\n    if (!result.parent || !result.parent.database_id) {\n      result.parent = { database_id: databaseId };\n    } else {\n      // 替换数据库ID\n      result.parent.database_id = databaseId;\n    }\n    \n    if (!result.properties) {\n      console.error('提取的JSON缺少properties字段');\n      result.properties = {};\n    }\n    \n    // 处理电影名称，保留中文部分、季数信息和可能的前导非中文名称部分\n    if (result.properties.名称 && result.properties.名称.title && result.properties.名称.title.length > 0) {\n      const originalTitle = result.properties.名称.title[0].text.content;\n      \n      // 查找是否包含季数信息\n      const seasonMatch = originalTitle.match(/(第[一二三四五六七八九十\\d]+[季部])/);\n      const seasonInfo = seasonMatch ? seasonMatch[0] : '';\n      \n      // 查找第一个明确的英文/数字分隔符（通常是空格后跟英文或数字或括号）\n      const englishPartMatch = originalTitle.match(/\\s+[A-Za-z0-9\\(]/);\n      \n      let processedTitle;\n      if (englishPartMatch) {\n        // 如果找到英文/数字部分，截取它之前的内容\n        processedTitle = originalTitle.substring(0, englishPartMatch.index).trim();\n      } else {\n        // 如果没找到，假定整个标题都是需要的\n        processedTitle = originalTitle.trim();\n      }\n      \n      // 确保季数信息被包含（如果原始标题中有，且截取后可能丢失）\n      if (seasonInfo && !processedTitle.includes(seasonInfo)) {\n         // 移除可能存在的年份括号，再添加季数\n         processedTitle = processedTitle.replace(/\\s*\\(\\d{4}\\)$/, '').trim(); \n         processedTitle = processedTitle + ' ' + seasonInfo;\n      }\n      \n      if (processedTitle) {\n          // 更新标题\n          result.properties.名称.title[0].text.content = processedTitle;\n      } else {\n          // 如果处理后标题为空，保留原始标题避免出错\n          console.warn(`处理标题 '${originalTitle}' 后结果为空，保留原标题。`);\n      }\n    }\n    \n    // 修复rich_text字段中的链接格式\n    const richTextFields = ['导演', '编剧', '主演', 'IMDb', '首播', '简介', '又名'];\n    richTextFields.forEach(field => {\n      if (result.properties[field] && result.properties[field].rich_text) {\n        result.properties[field].rich_text.forEach(item => {\n          // 处理链接格式\n          if (item.text && item.text.link) {\n            // 如果link是字符串，转换为对象格式\n            if (typeof item.text.link === 'string') {\n              item.text.link = { url: item.text.link };\n            } \n            // 如果link是对象但不符合预期格式，确保有url属性\n            else if (typeof item.text.link === 'object' && !item.text.link.url) {\n              const linkKeys = Object.keys(item.text.link);\n              if (linkKeys.length > 0) {\n                // 尝试使用第一个属性作为URL\n                item.text.link = { url: item.text.link[linkKeys[0]] };\n              } else {\n                // 如果对象是空的，设置为null\n                item.text.link = null;\n              }\n            }\n          }\n          \n          // 处理内容长度限制\n          if (item.text && item.text.content && item.text.content.length > 2000) {\n            // Notion rich_text内容限制为2000个字符\n            item.text.content = item.text.content.substring(0, 1997) + '...';\n          }\n        });\n      }\n    });\n    \n    // 确保评分是数字类型并获取评分值\n    let rating = 0;\n    if (result.properties.评分 && result.properties.评分.number) {\n      if (typeof result.properties.评分.number === 'string') {\n        rating = parseFloat(result.properties.评分.number) || 0;\n      } else {\n        rating = result.properties.评分.number;\n      }\n      // 保存回属性\n      result.properties.评分.number = rating;\n    }\n    \n    // 根据评分设置emoji图标\n    // 四舍五入评分值，最高为9\n    const roundedRating = Math.min(9, Math.round(rating));\n    \n    // 映射评分到emoji\n    const ratingEmojis = {\n      0: \"0️⃣\",\n      1: \"1️⃣\",\n      2: \"2️⃣\",\n      3: \"3️⃣\",\n      4: \"4️⃣\",\n      5: \"5️⃣\",\n      6: \"6️⃣\",\n      7: \"7️⃣\",\n      8: \"8️⃣\",\n      9: \"9️⃣\"\n    };\n    \n    // 设置图标为emoji\n    result.icon = {\n      \"type\": \"emoji\",\n      \"emoji\": ratingEmojis[roundedRating] || \"0️⃣\"\n    };\n    \n    // 将封面URL设置为页面封面，而不是图标\n    if (result.cover_url || (result.properties && result.properties.cover_url)) {\n      const coverUrl = result.cover_url || result.properties.cover_url;\n      \n      if (typeof coverUrl === 'string' && coverUrl.trim() !== '') {\n        result.cover = {\n          \"type\": \"external\",\n          \"external\": {\n            \"url\": coverUrl\n          }\n        };\n      }\n      \n      // 移除不需要的属性\n      delete result.cover_url;\n      if (result.properties && result.properties.cover_url) {\n        delete result.properties.cover_url;\n      }\n    }\n    \n    // 确保类型和语言是正确的multi_select格式\n    ['类型', '语言'].forEach(field => {\n      if (result.properties[field] && !Array.isArray(result.properties[field].multi_select)) {\n        // 如果不是数组，尝试转换为数组\n        const value = result.properties[field].multi_select;\n        if (typeof value === 'string') {\n          // 如果是字符串，按\"/\"或\",\"分割\n          result.properties[field].multi_select = value.split(/[\\/,、]/).map(item => ({\n            name: item.trim()\n          })).filter(item => item.name);\n        } else {\n          // 如果是其他类型，设置为空数组\n          result.properties[field].multi_select = [];\n        }\n      }\n    });\n    \n    // 将修复后的结果输出到控制台以便调试\n    console.log('处理后的Notion数据结构:', JSON.stringify(result, null, 2));\n    \n    return result;\n  } catch (error) {\n    console.error('处理AI响应时出错:', error);\n    // 返回一个基本的空对象结构，使用提供的数据库ID\n    return {\n      parent: { database_id: databaseId },\n      properties: {\n        名称: { title: [{ text: { content: \"处理出错\" } }] },\n        类别: { select: { name: \"未知\" } }\n      },\n      icon: {\n        type: \"emoji\",\n        emoji: \"0️⃣\"\n      }\n    };\n  }\n};\n\n// 用户设置的数据库ID\nconst notionDatabaseId = \"2493806905c5804a9ba1c0b5153b0d28\"; // 替换为你的实际数据库ID\n\n// 使用代码处理AI返回，并传入数据库ID\nconst notionReady = processAIResponse($input.first().json.output, notionDatabaseId);\nreturn notionReady;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1232,
+        48
+      ],
+      "id": "83371130-9ca4-4b63-abd0-4b4d4194c8f3",
+      "name": "数据notion化"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.notion.com/v1/pages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "notionApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{$json}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1440,
+        48
+      ],
+      "id": "2d3f0d3d-1e39-4ed8-a799-2331b253328e",
+      "name": "录入数据库",
+      "credentials": {
+        "notionApi": {
+          "id": "jHjtHDGqjTx4ezYs",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5-2025-08-07",
+          "mode": "list",
+          "cachedResultName": "gpt-5-2025-08-07"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        944,
+        272
+      ],
+      "id": "67e893a6-5b57-4b71-91e5-0c909f396c1e",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "qGwMYbyVvfkBwjp7",
+          "name": "v3 OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        912,
+        -112
+      ],
+      "id": "7534f183-36e1-4e38-9eb0-3ffb3d89368f",
+      "name": "When clicking ‘Execute workflow’"
+    }
+  ],
+  "connections": {
+    "搜索影视": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取电影详情": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "数据notion化",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "搜索影视",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "提取影视id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "提取影视id": {
+      "main": [
+        [
+          {
+            "node": "获取电影详情",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "数据notion化": {
+      "main": [
+        [
+          {
+            "node": "录入数据库",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "数据notion化",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "triggerCount": 1,
+  "versionId": "8fd45a69-436a-42e9-8b63-1fd7403b676d",
+  "owner": {
+    "type": "personal",
+    "projectId": "z4xrzX6UbOdfRzVH",
+    "projectName": "小刚 王 <767937116@qq.com>",
+    "personalEmail": "767937116@qq.com"
+  },
+  "parentFolderId": null,
+  "isArchived": false
+}

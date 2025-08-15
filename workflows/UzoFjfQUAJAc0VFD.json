@@ -1,0 +1,280 @@
+{
+  "id": "UzoFjfQUAJAc0VFD",
+  "name": "订阅邮箱正文链接",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailReadImap",
+      "typeVersion": 2.1,
+      "position": [
+        -1280,
+        -432
+      ],
+      "id": "c353ef81-d1f8-4650-b8d3-0b96693ca347",
+      "name": "Email Trigger (IMAP)",
+      "credentials": {
+        "imap": {
+          "id": "JBEHpP9Ib66wsWRt",
+          "name": "qq mail IMAP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "6d4bff64-bfcf-48cf-8bdf-4ce20f6c01da",
+              "leftValue": "={{ $json.from }}",
+              "rightValue": "767937116@qq.com",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "4cd2d134-133f-4131-96ee-c57c963e2240",
+              "leftValue": "={{ $json.from }}",
+              "rightValue": "ganggangshuo@vip.qq.com",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "looseTypeValidation": "=",
+        "options": {
+          "ignoreCase": false
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1056,
+        -432
+      ],
+      "id": "c071c56e-2184-4b24-a0fc-5b79777d5fc6",
+      "name": "If",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "629d7191-9796-416a-bfed-d2786b71f03c",
+              "name": "messageId",
+              "value": "={{ $json.metadata['message-id'] }}",
+              "type": "string"
+            },
+            {
+              "id": "482bc5e2-1ee7-4449-a3ac-7564e25c61b3",
+              "name": "FromEmail",
+              "value": "={{ $json.from }}",
+              "type": "string"
+            },
+            {
+              "id": "7359950d-0233-427f-a0c6-bb578c29ab70",
+              "name": "Subject",
+              "value": "={{ $json.subject }}",
+              "type": "string"
+            },
+            {
+              "id": "c276b64e-cade-4c64-b121-9be3b80f0953",
+              "name": "Date",
+              "value": "={{ $json.date }}",
+              "type": "string"
+            },
+            {
+              "id": "0855e3ab-dd05-47af-97a0-56acb7c0499f",
+              "name": "Content",
+              "value": "={{ $('Email Trigger (IMAP)').item.json.textPlain }}",
+              "type": "string"
+            },
+            {
+              "id": "a29453bd-d334-463f-943d-6efa28c3598a",
+              "name": "Url",
+              "value": "={{ ($json.textPlain.match(/https?:\\/\\/(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b([-a-zA-Z0-9()@:%_\\+.~#?&//=]*)/g) || [])[0];\n}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -832,
+        -448
+      ],
+      "id": "c0b8ad51-0a9b-4e31-851e-f27abf9c146d",
+      "name": "Edit Fields",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "请帮我整理输入的文本内容，具体包括以下要求：\n\n对输入的文本进行梳理，提炼核心信息，去除冗余内容，使表述更清晰、有条理。\n若文本中包含链接地址，请访问该链接，获取链接内的有效信息（如文章内容、数据、列表等），并将其与原文本内容整合后一并整理呈现。\n整理时请区分原文本信息与链接信息，便于清晰查看。",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.1,
+      "position": [
+        -592,
+        -432
+      ],
+      "id": "a8ac2a4f-d265-4636-a4a1-2032edbd394d",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.messageId }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -480,
+        -208
+      ],
+      "id": "feb5f0b4-478e-4b01-876d-2cd769802b27",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "cc-3-5-haiku-20241022",
+          "mode": "list",
+          "cachedResultName": "cc-3-5-haiku-20241022"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -608,
+        -208
+      ],
+      "id": "df2215ed-057f-4118-bc41-1af4aa81a43f",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "qGwMYbyVvfkBwjp7",
+          "name": "v3 OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "extractHtmlContent",
+        "extractionValues": {
+          "values": [
+            {}
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        -240,
+        -432
+      ],
+      "id": "4598285a-5481-478d-a2b3-0a193782e5b5",
+      "name": "HTML"
+    }
+  ],
+  "connections": {
+    "Email Trigger (IMAP)": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "triggerCount": 0,
+  "versionId": "2e0102b5-dfe3-4996-baef-ec949770b289",
+  "owner": {
+    "type": "personal",
+    "projectId": "z4xrzX6UbOdfRzVH",
+    "projectName": "小刚 王 <767937116@qq.com>",
+    "personalEmail": "767937116@qq.com"
+  },
+  "parentFolderId": null,
+  "isArchived": false
+}

@@ -1,6 +1,6 @@
 {
   "id": "jUJtnLYy0lSPn9Kb",
-  "name": "toNotion",
+  "name": "采集medium文章至Notion",
   "nodes": [
     {
       "parameters": {
@@ -95,7 +95,7 @@
       "type": "n8n-nodes-notion-markdown.notionMarkdown",
       "typeVersion": 1,
       "position": [
-        1152,
+        1776,
         -48
       ],
       "id": "8fd32e35-0bf7-41bd-a46b-28978fe98221",
@@ -104,7 +104,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ $vars.notionApi }}",
+        "url": "=https://api.notion.com/v1/pages",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "notionApi",
         "sendHeaders": true,
@@ -118,13 +118,13 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{$json}}",
+        "jsonBody": "={{$json.requestBody}}",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        1600,
+        2224,
         -144
       ],
       "id": "51af9347-d5bb-4d5a-a488-1f45f1b443c6",
@@ -138,13 +138,12 @@
     },
     {
       "parameters": {
-        "mode": "runOnceForEachItem",
-        "jsCode": "// Add a new field called 'myNewField' to the JSON of the item\nlet $json=$input.item.json\n\n\nconst requestBody = {\n  parent: {\n    page_id: \"2493806905c580f3a5a3e10eb109ca27\"\n  },\n  properties: {\n    title: {\n      title: [{\n        text: {\n          content: $('数据转换').item.json.title\n        }\n      }]\n    }\n  },\n  children: $json.output\n};\n\nreturn requestBody"
+        "jsCode": "let allItems = $input.all(); // 获取所有合并后的输入项\nconsole.log(allItems)\nlet requestBodies = [];\nlet requestBody = {};\nrequestBody.parent = {\n  page_id: \"2493806905c580f3a5a3e10eb109ca27\",\n};\nfor (let item of allItems) {\n  let output = item.json.output;\n  let text = item.json.title_text;\n\n  // 确保 text 存在\n  if (text) {\n    requestBody.properties = {\n      title: {\n        title: [\n          {\n            text: {\n              content: text,\n            },\n          },\n        ],\n      },\n    };\n  }\n    if (output.length>0) requestBody.children = output;\n \n  \n}\n\nfor (let item of allItems) {\nitem.json.requestBody=requestBody\n\n}\n  console.log(allItems)\nreturn allItems // 返回所有的请求体\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1376,
+        2000,
         -144
       ],
       "id": "48e375a2-95be-46be-92d9-6aa497884363",
@@ -199,13 +198,12 @@
       "type": "n8n-nodes-base.formTrigger",
       "typeVersion": 2.2,
       "position": [
-        -864,
-        -144
+        -768,
+        -96
       ],
       "id": "d2d31a66-a038-44f2-9e1a-14540ae79ea8",
       "name": "On form submission",
-      "webhookId": "68899304-d2f5-4400-9754-4159cde659ad",
-      "disabled": true
+      "webhookId": "68899304-d2f5-4400-9754-4159cde659ad"
     },
     {
       "parameters": {
@@ -213,13 +211,26 @@
           "__rl": true,
           "value": "yfcHvrZfBY5gxncE",
           "mode": "list",
-          "cachedResultName": "文本翻译流程模型"
+          "cachedResultName": "AI翻译流程"
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
-          "value": {},
+          "value": {
+            "input": "={{ $json.input }}"
+          },
           "matchingColumns": [],
-          "schema": [],
+          "schema": [
+            {
+              "id": "input",
+              "displayName": "input",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
           "attemptToConvertTypes": false,
           "convertFieldsToString": true
         },
@@ -241,11 +252,12 @@
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
       "position": [
-        -864,
-        -336
+        -848,
+        -368
       ],
       "id": "c66bd9cd-4f02-43c6-a2b7-42953f051ddb",
-      "name": "When clicking ‘Execute workflow’"
+      "name": "When clicking ‘Execute workflow’",
+      "disabled": true
     },
     {
       "parameters": {
@@ -298,7 +310,7 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        1152,
+        1776,
         -240
       ],
       "id": "d602e922-12a0-4a5c-b78b-02d657e8195a",
@@ -310,13 +322,26 @@
           "__rl": true,
           "value": "yfcHvrZfBY5gxncE",
           "mode": "list",
-          "cachedResultName": "文本翻译流程模型"
+          "cachedResultName": "AI翻译流程"
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
-          "value": {},
+          "value": {
+            "input": "={{ $json.input }}"
+          },
           "matchingColumns": [],
-          "schema": [],
+          "schema": [
+            {
+              "id": "input",
+              "displayName": "input",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
           "attemptToConvertTypes": false,
           "convertFieldsToString": true
         },
@@ -350,7 +375,7 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        928,
+        1136,
         -336
       ],
       "id": "6da711e0-1113-45c6-847d-989f9b5bb7ca",
@@ -362,7 +387,7 @@
           "assignments": [
             {
               "id": "c57b705f-dec0-439e-ae0a-848636a7cb34",
-              "name": "title",
+              "name": "title_text",
               "value": "={{ $json.fanyi_output }}",
               "type": "string"
             }
@@ -373,11 +398,37 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        928,
-        -144
+        1168,
+        -128
       ],
       "id": "63aaa9d8-1d92-4736-930c-53e038e19db3",
       "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nfor (const item of $input.all()) {\n  item.json.fanyi_output=item.json.fanyi_output.replaceAll(\"```markdown\\n\",\"\").replaceAll(\"\\n```\",\"\")\n}\n\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        912,
+        -144
+      ],
+      "id": "b49aefe2-5bda-4fbf-aa80-70b3a54f9bfe",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nfor (const item of $input.all()) {\n  item.json.fanyi_output=item.json.fanyi_output.replaceAll(\"以下是翻译后的 Markdown 内容：\",\"\")\n}\n\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        912,
+        -288
+      ],
+      "id": "e01f5c74-44ad-4183-85c8-0091ac3b4e6a",
+      "name": "Code1"
     }
   ],
   "connections": {
@@ -483,7 +534,7 @@
       "main": [
         [
           {
-            "node": "Edit Fields2",
+            "node": "Code",
             "type": "main",
             "index": 0
           }
@@ -538,7 +589,7 @@
       "main": [
         [
           {
-            "node": "Edit Fields1",
+            "node": "Code1",
             "type": "main",
             "index": 0
           }
@@ -566,13 +617,35 @@
           }
         ]
       ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
     "executionOrder": "v1"
   },
   "triggerCount": 1,
-  "versionId": "43c539c4-20ad-4493-914a-883f47f82112",
+  "versionId": "d6f70cf2-8493-4c19-9b78-4c5d6ffa87f6",
   "owner": {
     "type": "personal",
     "projectId": "z4xrzX6UbOdfRzVH",

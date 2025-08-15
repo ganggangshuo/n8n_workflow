@@ -1,0 +1,470 @@
+{
+  "id": "C8C5QD5wW4Gu8U28",
+  "name": "公众号2",
+  "nodes": [
+    {
+      "parameters": {
+        "url": "http://172.16.3.99:4000/feeds/MP_WXS_3008800644.rss?limit=2",
+        "options": {
+          "ignoreSSL": true
+        }
+      },
+      "id": "cd57048f-86bd-4b9a-8ad8-b8238d9482bc",
+      "name": "RSS Feed",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1,
+      "position": [
+        -2672,
+        64
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// 提取和清理RSS数据\nconst items = [];\n\nfor (const item of $input.all()) {\n  const title = item.json.title || '';\n  const content = item.json.contentSnippet || item.json.content || '';\n  const link = item.json.link || '';\n  const pubDate = item.json.pubDate || '';\n  \n  // 清理HTML标签和格式化\n  const cleanContent = content.replace(/<[^>]*>/g, '').trim();\n  \n  // 只处理有效内容\n  if (title && cleanContent && cleanContent.length > 100) {\n    items.push({\n      originalTitle: title,\n      originalContent: cleanContent.substring(0, 1500), // 限制长度\n      sourceLink: link,\n      publishDate: pubDate,\n      timestamp: new Date().toISOString()\n    });\n  }\n}\n\n// 返回处理后的数据\nreturn items.map(item => ({ json: item }));"
+      },
+      "id": "b4239223-c1a2-48f2-b004-fe5e27e30df3",
+      "name": "数据清理",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2464,
+        64
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "chat",
+        "model": "claude-3-5-haiku-20241022",
+        "options": {},
+        "requestOptions": {}
+      },
+      "id": "de4ba6ac-ef4a-4c01-abf5-fc02a91db0c7",
+      "name": "AI仿写文章",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [
+        -2240,
+        64
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "qGwMYbyVvfkBwjp7",
+          "name": "v3 OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// 解析AI生成的内容\nconst items = [];\n\nfor (const item of $input.all()) {\n  const aiResponse = item.json.choices[0].message.content;\n  \n  // 解析标题和内容\n  const titleMatch = aiResponse.match(/标题[：:](.*?)(?=\\n|内容)/s);\n  const contentMatch = aiResponse.match(/内容[：:]([\\s\\S]+)/s);\n  \n  const newTitle = titleMatch ? titleMatch[1].trim() : item.json.originalTitle;\n  const newContent = contentMatch ? contentMatch[1].trim() : aiResponse;\n  \n  // 清理内容格式\n  const cleanTitle = newTitle.replace(/[\"\"]/g, '');\n  const cleanContent = newContent.replace(/\\n{3,}/g, '\\n\\n').trim();\n  \n  items.push({\n    title: cleanTitle,\n    content: cleanContent,\n    sourceLink: item.json.sourceLink,\n    publishDate: item.json.publishDate,\n    originalTitle: item.json.originalTitle\n  });\n}\n\nreturn items.map(item => ({ json: item }));"
+      },
+      "id": "7be94bb5-1d39-42b1-98bd-6f6a7d5cc2af",
+      "name": "解析AI内容",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2016,
+        64
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "prompt": "为微信公众号文章创建封面图：\"{{ $json.title }}\"\n\n要求：\n- 现代简洁的设计风格\n- 适合作为文章封面\n- 16:9横版比例\n- 颜色搭配和谐专业\n- 不包含任何文字\n- 视觉效果吸引人\n- 符合文章主题氛围",
+        "model": "dall-e-3",
+        "options": {
+          "quality": "hd",
+          "size": "1024x1024",
+          "style": "vivid"
+        },
+        "requestOptions": {}
+      },
+      "id": "18e04513-521f-4856-8f3c-cc6c31a6aa94",
+      "name": "AI配图",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [
+        -1792,
+        64
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "qGwMYbyVvfkBwjp7",
+          "name": "v3 OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.data[0].url }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "arraybuffer"
+            }
+          }
+        }
+      },
+      "id": "f70f8f31-1fae-4c96-ba8a-55562984153d",
+      "name": "下载图片",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1584,
+        64
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// 处理下载的图片\nconst items = [];\n\nfor (const item of $input.all()) {\n  const imageBuffer = item.binary.data;\n  \n  // 转换为base64\n  const base64Image = imageBuffer.toString('base64');\n  \n  items.push({\n    title: item.json.title,\n    content: item.json.content,\n    sourceLink: item.json.sourceLink,\n    publishDate: item.json.publishDate,\n    originalTitle: item.json.originalTitle,\n    imageBase64: base64Image,\n    imageSize: imageBuffer.length\n  });\n}\n\nreturn items.map(item => ({ json: item }));"
+      },
+      "id": "2dd7e5d1-0408-4476-8ebe-dbb0015ad1fd",
+      "name": "处理图片",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1360,
+        64
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.weixin.qq.com/cgi-bin/token",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "grant_type",
+              "value": "client_credential"
+            },
+            {
+              "name": "appid",
+              "value": "={{ $vars.wxappid }}"
+            },
+            {
+              "name": "secret",
+              "value": "={{ $vars.wxsecret }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          },
+          "timeout": 30000
+        }
+      },
+      "id": "8ef1ac58-64fb-4913-af15-c1c8972a9f85",
+      "name": "获取微信Token",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1136,
+        64
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.weixin.qq.com/cgi-bin/media/upload",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "access_token",
+              "value": "={{ $json.access_token }}"
+            },
+            {
+              "name": "type",
+              "value": "thumb"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "media"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "ecb5e3b8-75ef-4472-aad5-e678828be87c",
+      "name": "上传封面图",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -912,
+        64
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// 验证上传结果并准备发布数据\nconst items = [];\n\nfor (const item of $input.all()) {\n  const uploadResult = item.json;\n  const articleData = $('处理图片').item.json;\n  const tokenData = $('获取微信Token').item.json;\n  \n  if (uploadResult.media_id) {\n    // 格式化文章内容\n    const formattedContent = `\n${articleData.content}\n\n<br/><br/>\n<p style=\"color:#999;font-size:12px;\">本文内容基于网络资源整理创作，如有侵权请联系删除。</p>\n<p style=\"color:#999;font-size:12px;\">原文链接：<a href=\"${articleData.sourceLink}\">${articleData.sourceLink}</a></p>\n    `.trim();\n    \n    items.push({\n      access_token: tokenData.access_token,\n      media_id: uploadResult.media_id,\n      title: articleData.title,\n      content: formattedContent,\n      digest: articleData.content.substring(0, 120) + '...',\n      sourceLink: articleData.sourceLink,\n      author: \"智能创作助手\",\n      originalTitle: articleData.originalTitle\n    });\n  } else {\n    // 上传失败，记录错误\n    items.push({\n      error: \"图片上传失败\",\n      uploadResult: uploadResult,\n      title: articleData.title\n    });\n  }\n}\n\nreturn items.map(item => ({ json: item }));"
+      },
+      "id": "485fb866-2572-40e0-aedf-20c640a56348",
+      "name": "准备发布数据",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -704,
+        64
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "c1a2b3c4-d5e6-f7g8-h9i0-j1k2l3m4n5o6",
+              "leftValue": "={{ $json.error }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "isEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "55751073-1481-4d95-8aa5-82c42cc26827",
+      "name": "检查是否有错误",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -480,
+        64
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.weixin.qq.com/cgi-bin/draft/add",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "access_token",
+              "value": "={{ $json.access_token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"articles\": [\n    {\n      \"title\": \"{{ $json.title }}\",\n      \"author\": \"{{ $json.author }}\",\n      \"digest\": \"{{ $json.digest }}\",\n      \"content\": \"{{ $json.content }}\",\n      \"content_source_url\": \"{{ $json.sourceLink }}\",\n      \"thumb_media_id\": \"{{ $json.media_id }}\",\n      \"need_open_comment\": 1,\n      \"only_fans_can_comment\": 0\n    }\n  ]\n}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "f5dd5618-3fef-4c77-8ab0-40425590de92",
+      "name": "发布到微信公众号",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -256,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// 记录错误信息\nconst items = [];\n\nfor (const item of $input.all()) {\n  console.log('发布失败:', item.json);\n  \n  items.push({\n    status: 'error',\n    message: '文章发布过程中出现错误',\n    error: item.json.error || '未知错误',\n    title: item.json.title || '无标题',\n    timestamp: new Date().toISOString()\n  });\n}\n\nreturn items.map(item => ({ json: item }));"
+      },
+      "id": "d37bb9a0-3be8-443a-9831-01aa9e545e54",
+      "name": "错误处理",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -256,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// 记录发布结果\nconst items = [];\n\nfor (const item of $input.all()) {\n  const result = item.json;\n  const publishData = $('准备发布数据').item.json;\n  \n  if (result.media_id) {\n    items.push({\n      status: 'success',\n      message: '文章已成功发布为草稿',\n      media_id: result.media_id,\n      title: publishData.title,\n      originalTitle: publishData.originalTitle,\n      timestamp: new Date().toISOString()\n    });\n  } else {\n    items.push({\n      status: 'failed',\n      message: '文章发布失败',\n      error: result,\n      title: publishData.title,\n      timestamp: new Date().toISOString()\n    });\n  }\n}\n\nreturn items.map(item => ({ json: item }));"
+      },
+      "id": "6146a7b8-f800-44cd-8eac-f299bcf836a4",
+      "name": "记录发布结果",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -32,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "RSS Feed": {
+      "main": [
+        [
+          {
+            "node": "数据清理",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "数据清理": {
+      "main": [
+        [
+          {
+            "node": "AI仿写文章",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI仿写文章": {
+      "main": [
+        [
+          {
+            "node": "解析AI内容",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "解析AI内容": {
+      "main": [
+        [
+          {
+            "node": "AI配图",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI配图": {
+      "main": [
+        [
+          {
+            "node": "下载图片",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "下载图片": {
+      "main": [
+        [
+          {
+            "node": "处理图片",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "处理图片": {
+      "main": [
+        [
+          {
+            "node": "获取微信Token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取微信Token": {
+      "main": [
+        [
+          {
+            "node": "上传封面图",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "上传封面图": {
+      "main": [
+        [
+          {
+            "node": "准备发布数据",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "准备发布数据": {
+      "main": [
+        [
+          {
+            "node": "检查是否有错误",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "检查是否有错误": {
+      "main": [
+        [
+          {
+            "node": "发布到微信公众号",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "错误处理",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "发布到微信公众号": {
+      "main": [
+        [
+          {
+            "node": "记录发布结果",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "triggerCount": 0,
+  "versionId": "dfe3b242-3824-4523-b12d-1ec8a15ac69b",
+  "owner": {
+    "type": "personal",
+    "projectId": "z4xrzX6UbOdfRzVH",
+    "projectName": "小刚 王 <767937116@qq.com>",
+    "personalEmail": "767937116@qq.com"
+  },
+  "parentFolderId": null,
+  "isArchived": false
+}
